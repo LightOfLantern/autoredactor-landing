@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoRedactor — улучшение UX-текстов в Figma</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #7b61ff;
+      --accent-light: rgba(123, 97, 255, 0.1);
+      --text: #1a1a2e;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #ffffff;
+      --surface: #f9fafb;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      font-size: 16px;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* NAV */
+    nav {
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-logo span {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+    }
+
+    .nav-link {
+      color: var(--muted);
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .nav-link:hover { color: var(--text); text-decoration: none; }
+
+    /* SECTIONS */
+    section { padding: 80px 24px; }
+    .container { max-width: 720px; margin: 0 auto; }
+
+    /* HERO */
+    .hero {
+      padding: 100px 24px 80px;
+      text-align: center;
+      background: linear-gradient(160deg, #f5f3ff 0%, #ffffff 60%);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 40px;
+    }
+
+    .price-block {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 40px;
+      box-shadow: 0 4px 24px rgba(123,97,255,0.08);
+    }
+
+    .price-amount {
+      font-size: 40px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .price-period {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .price-note {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* HOW IT WORKS */
+    .how { background: var(--surface); }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 48px;
+      color: var(--text);
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .step {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .step-body h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .step-body p {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* FEATURES */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .feature-icon {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+
+    .feature-card h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* PRICING */
+    .pricing { background: var(--surface); }
+
+    .pricing-card {
+      background: white;
+      border: 2px solid var(--accent);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 420px;
+      margin: 0 auto;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(123,97,255,0.12);
+    }
+
+    .pricing-name {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .pricing-price {
+      font-size: 52px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .pricing-price sup {
+      font-size: 24px;
+      font-weight: 600;
+      vertical-align: super;
+    }
+
+    .pricing-period {
+      font-size: 15px;
+      color: var(--muted);
+      margin-top: 6px;
+      margin-bottom: 32px;
+    }
+
+    .pricing-features {
+      list-style: none;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .pricing-features li {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pricing-features li::before {
+      content: '✓';
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      background: var(--accent-light);
+      color: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .pricing-note {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* OFFER */
+    .offer { border-top: 1px solid var(--border); }
+
+    .offer-body {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .offer-body h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+
+    .offer-body h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 20px;
+      margin-bottom: 6px;
+    }
+
+    /* CONTACTS */
+    .contacts { background: var(--surface); border-top: 1px solid var(--border); }
+
+    .contacts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+    }
+
+    .contact-item label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .contact-item p {
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      section { padding: 60px 16px; }
+      .hero { padding: 72px 16px 60px; }
+      .pricing-card { padding: 28px 20px; }
+      .offer-body { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-logo">
+      <span>✦</span> AutoRedactor
+    </div>
+    <a href="#offer" class="nav-link">Оферта</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">✦ Плагин для Figma</div>
+      <h1>Улучшайте <em>UX-тексты</em><br>прямо в макете</h1>
+      <p>AutoRedactor переписывает интерфейсные тексты с помощью AI — короче, яснее, точнее. Результат применяется в макет в один клик.</p>
+      <div class="price-block">
+        <div class="price-amount">169 ₽</div>
+        <div class="price-period">в месяц</div>
+        <div class="price-note">30 бесплатных улучшений при первом использовании</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how">
+    <div class="container">
+      <div class="section-label">Как это работает</div>
+      <div class="section-title">Три шага до результата</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Установите плагин в Figma</h3>
+            <p>Найдите AutoRedactor в Figma Community и добавьте в рабочее пространство.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Выделите фрейм или группу</h3>
+            <p>Плагин автоматически находит все текстовые слои в выделении.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Нажмите «Улучшить тексты»</h3>
+            <p>AI переписывает тексты и применяет результат прямо в макет — шрифты и стили сохраняются.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section>
+    <div class="container">
+      <div class="section-label">Возможности</div>
+      <div class="section-title">Что умеет плагин</div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">✍️</div>
+          <h3>Переписывает тексты</h3>
+          <p>Делает интерфейсные тексты короче, понятнее и конкретнее. Убирает канцелярит и воду.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📋</div>
+          <h3>Учитывает редполитику</h3>
+          <p>Загрузите свой документ с правилами — плагин будет следовать вашему тону и стилю.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Применяет в макет</h3>
+          <p>Тексты вставляются прямо в текстовые слои Figma. Не нужно копировать вручную.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Не нужен свой API-ключ</h3>
+          <p>AI работает на нашей стороне. Просто подпишитесь и пользуйтесь.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing">
+    <div class="container">
+      <div class="section-label" style="text-align:center">Тарифы</div>
+      <div class="section-title" style="text-align:center">Простая и понятная цена</div>
+      <div class="pricing-card">
+        <div class="pricing-name">Подписка</div>
+        <div class="pricing-price"><sup>₽</sup>169</div>
+        <div class="pricing-period">в месяц · автопродление</div>
+        <ul class="pricing-features">
+          <li>Неограниченное количество улучшений</li>
+          <li>AI на нашей стороне — свой ключ не нужен</li>
+          <li>Редполитика под ваш стиль</li>
+          <li>Применение результата прямо в макет</li>
+          <li>30 бесплатных улучшений для старта</li>
+        </ul>
+        <div class="pricing-note">Доступ открывается сразу после оплаты в плагине Figma.<br>Отменить подписку можно в любой момент.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OFFER -->
+  <section class="offer" id="offer">
+    <div class="container">
+      <div class="section-label">Документы</div>
+      <div class="offer-body">
+        <h2>Публичная оферта на оказание услуг</h2>
+
+        <h3>1. Общие положения</h3>
+        <p>Настоящая публичная оферта (далее — «Оферта») является предложением физического лица, применяющего специальный налоговый режим «Налог на профессиональный доход» (самозанятого), Лопаткина Александра Сергеевича, ИНН 772855128359 (далее — «Исполнитель»), заключить договор об оказании услуг доступа к программному обеспечению AutoRedactor на условиях, изложенных ниже.</p>
+        <p>Акцептом настоящей Оферты является факт оплаты подписки. Совершая оплату, пользователь подтверждает, что ознакомился с условиями Оферты и принимает их в полном объёме.</p>
+
+        <h3>2. Предмет договора</h3>
+        <p>Исполнитель предоставляет Пользователю платный доступ к плагину AutoRedactor для Figma — программному инструменту для автоматического улучшения UX-текстов с помощью искусственного интеллекта.</p>
+
+        <h3>3. Стоимость и порядок оплаты</h3>
+        <p>Стоимость подписки составляет 169 (сто шестьдесят девять) рублей в месяц. Оплата производится через сервис ЮKassa. Подписка продлевается автоматически каждые 30 дней. Пользователь вправе отключить автопродление в любой момент через интерфейс плагина.</p>
+
+        <h3>4. Способ получения услуги</h3>
+        <p>Доступ к неограниченному использованию плагина открывается автоматически сразу после подтверждения оплаты — непосредственно в интерфейсе плагина AutoRedactor в Figma. Установка дополнительного программного обеспечения не требуется.</p>
+
+        <h3>5. Возврат денежных средств</h3>
+        <p>Пользователь вправе отказаться от подписки в любое время. Средства за текущий оплаченный период не возвращаются. В случае технической ошибки или двойного списания Исполнитель рассматривает обращения в течение 5 рабочих дней и при подтверждении ошибки возвращает излишне списанные средства.</p>
+
+        <h3>6. Права и обязанности сторон</h3>
+        <p>Исполнитель обязуется обеспечивать работоспособность сервиса и устранять технические неполадки в разумные сроки. Пользователь обязуется использовать плагин в соответствии с его назначением и не нарушать авторские права.</p>
+
+        <h3>7. Ограничение ответственности</h3>
+        <p>Плагин предоставляется «как есть». Исполнитель не несёт ответственности за косвенные убытки, упущенную выгоду или качество контента, сгенерированного с помощью AI. Исполнитель не гарантирует бесперебойную работу сторонних AI-сервисов.</p>
+
+        <h3>8. Персональные данные</h3>
+        <p>При использовании плагина обрабатывается идентификатор пользователя Figma и имя аккаунта. Данные используются исключительно для идентификации пользователя и учёта использования сервиса. Данные не передаются третьим лицам, за исключением случаев, предусмотренных законодательством РФ.</p>
+
+        <h3>9. Применимое право</h3>
+        <p>Настоящая Оферта регулируется законодательством Российской Федерации. Все споры разрешаются путём переговоров, а при недостижении согласия — в судебном порядке по месту нахождения Исполнителя.</p>
+
+        <h3>10. Реквизиты Исполнителя</h3>
+        <p>
+          Лопаткин Александр Сергеевич<br>
+          Самозанятый, ИНН: 772855128359<br>
+          Email: fallofglory@gmail.com
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACTS -->
+  <section class="contacts" id="contacts">
+    <div class="container">
+      <div class="section-label">Контакты и реквизиты</div>
+      <div class="section-title">Свяжитесь с нами</div>
+      <div class="contacts-grid">
+        <div class="contact-item">
+          <label>Исполнитель</label>
+          <p>Лопаткин Александр Сергеевич</p>
+        </div>
+        <div class="contact-item">
+          <label>Статус</label>
+          <p>Самозанятый</p>
+        </div>
+        <div class="contact-item">
+          <label>ИНН</label>
+          <p>772855128359</p>
+        </div>
+        <div class="contact-item">
+          <label>Email</label>
+          <p><a href="mailto:fallofglory@gmail.com">fallofglory@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 AutoRedactor · Лопаткин Александр Сергеевич, ИНН 772855128359 · <a href="#offer">Оферта</a></p>
+  </footer>
+
+</body>
+</html>
