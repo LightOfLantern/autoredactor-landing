@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Управление подпиской — AutoRedactor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #7b61ff;
+      --accent-light: rgba(123, 97, 255, 0.1);
+      --accent-hover: #6a50ee;
+      --text: #1a1a2e;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #ffffff;
+      --surface: #f9fafb;
+      --success: #10b981;
+      --success-bg: #ecfdf5;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --danger-light: rgba(239, 68, 68, 0.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      font-size: 16px;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* NAV */
+    nav {
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+
+    .nav-logo {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .nav-logo .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-logo .logo-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: #fff;
+    }
+
+    /* MAIN LAYOUT */
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    .page-header {
+      margin-bottom: 36px;
+    }
+
+    .breadcrumb {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .breadcrumb a {
+      color: var(--muted);
+    }
+
+    .breadcrumb a:hover {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .breadcrumb-sep {
+      color: var(--border);
+    }
+
+    .page-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    /* CARD */
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    /* STATUS BADGE */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* SUBSCRIPTION INFO */
+    .sub-plan {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .sub-plan-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .sub-plan-desc {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .sub-price {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .sub-price-amount {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1.1;
+    }
+
+    .sub-price-period {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* DETAILS GRID */
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    .detail-item {
+      padding: 16px 20px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-item:nth-child(2n) {
+      border-right: none;
+    }
+
+    .detail-item:nth-last-child(-n+2) {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 4px;
+    }
+
+    .detail-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .detail-value.accent {
+      color: var(--accent);
+    }
+
+    /* FEATURES */
+    .features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .features-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .feature-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .feature-check svg {
+      width: 11px;
+      height: 11px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, opacity 0.15s, transform 0.1s;
+      font-family: inherit;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-danger {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      background: var(--border);
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    /* CANCEL SECTION */
+    .cancel-section {
+      padding: 24px;
+    }
+
+    .cancel-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .cancel-desc {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* CONFIRM DIALOG */
+    .confirm-box {
+      display: none;
+      background: #fff8f8;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+
+    .confirm-box.visible {
+      display: block;
+    }
+
+    .confirm-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--danger);
+      margin-bottom: 6px;
+    }
+
+    .confirm-text {
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 16px;
+      line-height: 1.55;
+    }
+
+    .confirm-text strong {
+      font-weight: 600;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* CANCELLED STATE */
+    .cancelled-box {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+      text-align: center;
+    }
+
+    .cancelled-box.visible {
+      display: block;
+    }
+
+    .cancelled-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .cancelled-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .cancelled-desc {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* INFO NOTE */
+    .info-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--accent-light);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .info-note-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .info-note-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    footer a {
+      color: var(--muted);
+    }
+
+    footer a:hover {
+      color: var(--accent);
+    }
+
+    @media (max-width: 520px) {
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-item {
+        border-right: none;
+      }
+
+      .detail-item:nth-last-child(-n+2) {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .detail-item:last-child {
+        border-bottom: none;
+      }
+
+      .sub-plan {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .sub-price {
+        text-align: left;
+      }
+
+      .confirm-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">
+        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 3h12v2H2V3zm0 4h8v2H2V7zm0 4h5v2H2v-2z"/>
+        </svg>
+      </span>
+      AutoRedactor
+    </a>
+    <span class="status-badge">
+      <span class="status-dot"></span>
+      Подписка активна
+    </span>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+    <div class="page-header">
+      <div class="breadcrumb">
+        <a href="index.html">Главная</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Управление подпиской</span>
+      </div>
+      <h1 class="page-title">Управление подпиской</h1>
+    </div>
+
+    <!-- SUBSCRIPTION CARD -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Текущий план</span>
+        <span class="status-badge">
+          <span class="status-dot"></span>
+          Активна
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="sub-plan">
+          <div>
+            <div class="sub-plan-name">AutoRedactor Pro</div>
+            <div class="sub-plan-desc">Месячная подписка · Figma Plugin</div>
+          </div>
+          <div class="sub-price">
+            <div class="sub-price-amount">169 ₽</div>
+            <div class="sub-price-period">в месяц</div>
+          </div>
+        </div>
+
+        <div class="details-grid">
+          <div class="detail-item">
+            <div class="detail-label">Статус</div>
+            <div class="detail-value accent">Активна</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Следующее списание</div>
+            <div class="detail-value">28 апреля 2026</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Дата подключения</div>
+            <div class="detail-value">28 марта 2026</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Сумма списания</div>
+            <div class="detail-value">169 ₽</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES CARD -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Что включено</span>
+      </div>
+      <div class="card-body">
+        <ul class="features-list">
+          <li>
+            <span class="feature-check">
+              <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+            </span>
+            Неограниченное редактирование UX-текстов в Figma
+          </li>
+          <li>
+            <span class="feature-check">
+              <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+            </span>
+            Пакетная обработка всех текстовых слоёв
+          </li>
+          <li>
+            <span class="feature-check">
+              <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+            </span>
+            Настраиваемый тон и стиль текста
+          </li>
+          <li>
+            <span class="feature-check">
+              <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+            </span>
+            Поддержка русского и английского языков
+          </li>
+          <li>
+            <span class="feature-check">
+              <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+            </span>
+            Приоритетная поддержка
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- INFO NOTE -->
+    <div class="info-note" style="margin-bottom: 20px;">
+      <span class="info-note-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </span>
+      <span>
+        Следующее списание <strong>169 ₽</strong> будет выполнено <strong>28 апреля 2026</strong>. Вы можете отменить автопродление в любой момент — доступ сохранится до конца оплаченного периода.
+      </span>
+    </div>
+
+    <!-- CANCEL CARD -->
+    <div class="card">
+      <div class="cancel-section">
+        <div class="cancel-title">Отмена автопродления</div>
+        <div class="cancel-desc">
+          После отмены подписка продолжит действовать до 28 апреля 2026. Повторное списание не произойдёт.
+        </div>
+
+        <button class="btn btn-danger" id="cancelBtn" onclick="showConfirm()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          Отменить автопродление
+        </button>
+
+        <!-- CONFIRM BOX -->
+        <div class="confirm-box" id="confirmBox">
+          <div class="confirm-title">Вы уверены?</div>
+          <div class="confirm-text">
+            Автопродление будет отменено. Доступ к плагину сохранится до <strong>28 апреля 2026</strong> — конца текущего оплаченного периода. После этой даты подписка не продлится.
+          </div>
+          <div class="confirm-actions">
+            <button class="btn btn-danger" onclick="doCancel()">Да, отменить</button>
+            <button class="btn btn-ghost" onclick="hideConfirm()">Нет, оставить</button>
+          </div>
+        </div>
+
+        <!-- CANCELLED STATE -->
+        <div class="cancelled-box" id="cancelledBox">
+          <div class="cancelled-icon">✓</div>
+          <div class="cancelled-title">Автопродление отменено</div>
+          <div class="cancelled-desc">Подписка активна до 28 апреля 2026. После этой даты списания не будет.</div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 AutoRedactor · <a href="mailto:support@microproducts.ru">support@microproducts.ru</a> · <a href="index.html">На главную</a></p>
+  </footer>
+
+  <script>
+    function showConfirm() {
+      document.getElementById('confirmBox').classList.add('visible');
+      document.getElementById('cancelBtn').style.display = 'none';
+    }
+
+    function hideConfirm() {
+      document.getElementById('confirmBox').classList.remove('visible');
+      document.getElementById('cancelBtn').style.display = '';
+    }
+
+    function doCancel() {
+      document.getElementById('confirmBox').classList.remove('visible');
+      document.getElementById('cancelledBox').classList.add('visible');
+
+      // Обновляем статус в шапке и хедере карточки
+      document.querySelectorAll('.status-badge').forEach(function(el) {
+        el.style.background = '#f3f4f6';
+        el.style.color = '#6b7280';
+        el.querySelector('.status-dot').style.background = '#9ca3af';
+        el.querySelector('.status-dot').style.animation = 'none';
+        el.childNodes[el.childNodes.length - 1].textContent = 'Отменено';
+      });
+
+      // Обновляем значение статуса в карточке деталей
+      document.querySelector('.detail-value.accent').textContent = 'Отменена';
+      document.querySelector('.detail-value.accent').style.color = '#6b7280';
+    }
+  </script>
+
+</body>
+</html>
