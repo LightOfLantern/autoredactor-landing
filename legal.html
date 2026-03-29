@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Правовые документы — AutoRedactor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #7b61ff;
+      --accent-light: rgba(123, 97, 255, 0.1);
+      --text: #1a1a2e;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #ffffff;
+      --surface: #f9fafb;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      font-size: 16px;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* NAV */
+    nav {
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-logo span {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+    }
+
+    .nav-link {
+      color: var(--muted);
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .nav-link:hover { color: var(--text); text-decoration: none; }
+    .nav-link.active { color: var(--accent); }
+
+    /* PAGE HEADER */
+    .page-header {
+      padding: 64px 24px 48px;
+      background: linear-gradient(160deg, #f5f3ff 0%, #ffffff 60%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-header .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .page-header-label {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .page-header h1 {
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .page-header p {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    /* MAIN CONTENT */
+    .content {
+      padding: 48px 24px 80px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    /* ACCORDION */
+    .accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .accordion-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .accordion-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 28px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      gap: 16px;
+      transition: background 0.15s;
+    }
+
+    .accordion-trigger:hover {
+      background: var(--surface);
+    }
+
+    .accordion-trigger-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .accordion-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .accordion-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .accordion-icon {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      background: var(--accent-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease, background 0.2s;
+    }
+
+    .accordion-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 0.3s ease;
+    }
+
+    .accordion-item.open .accordion-icon {
+      background: var(--accent);
+    }
+
+    .accordion-item.open .accordion-icon svg {
+      stroke: white;
+      transform: rotate(180deg);
+    }
+
+    .accordion-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .accordion-body-inner {
+      padding: 0 28px 28px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* DOCUMENT CONTENT */
+    .doc-content {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.75;
+      padding-top: 24px;
+    }
+
+    .doc-content .doc-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .doc-content .doc-edition {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .doc-content h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 20px;
+      margin-bottom: 6px;
+    }
+
+    .doc-content p {
+      margin-bottom: 8px;
+    }
+
+    .doc-content ul {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 8px;
+    }
+
+    .doc-content ul li {
+      padding-left: 16px;
+      position: relative;
+      margin-bottom: 4px;
+    }
+
+    .doc-content ul li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--muted);
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      .page-header { padding: 48px 16px 36px; }
+      .content { padding: 32px 16px 60px; }
+      .accordion-trigger { padding: 20px; }
+      .accordion-body-inner { padding: 0 20px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/autoredactor-landing/" class="nav-logo">
+      <span>✦</span> AutoRedactor
+    </a>
+    <div style="display:flex;gap:20px">
+      <a href="/autoredactor-landing/#contacts" class="nav-link">Контакты</a>
+      <a href="/autoredactor-landing/legal.html" class="nav-link active">Правовые документы</a>
+      <a href="/autoredactor-landing/manage.html" class="nav-link">Подписка</a>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <div class="container">
+      <div class="page-header-label">Документы</div>
+      <h1>Правовые документы</h1>
+      <p>Публичная оферта и политика конфиденциальности AutoRedactor</p>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="container">
+      <div class="accordion">
+
+        <!-- ACCORDION 1: ОФЕРТА -->
+        <div class="accordion-item" id="offer">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)" aria-expanded="false">
+            <div class="accordion-trigger-text">
+              <span class="accordion-title">Публичная оферта на оказание услуг</span>
+              <span class="accordion-subtitle">Редакция от 29.03.2026</span>
+            </div>
+            <div class="accordion-icon">
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-body-inner">
+              <div class="doc-content">
+                <p class="doc-title">Публичная оферта на оказание услуг</p>
+                <p class="doc-edition">Редакция от 29.03.2026</p>
+
+                <h3>1. Общие положения</h3>
+                <p>Настоящая публичная оферта (далее — «Оферта») является предложением физического лица, применяющего специальный налоговый режим «Налог на профессиональный доход», Лопаткина Александра Сергеевича, ИНН 772855128359 (далее — «Исполнитель»), заключить договор об оказании услуг доступа к программному инструменту AutoRedactor.</p>
+                <p>Акцептом настоящей Оферты является факт совершения оплаты. Оплата означает, что Пользователь ознакомился с условиями Оферты, понимает и принимает их в полном объёме. Договор считается заключённым с момента поступления оплаты на счёт Исполнителя (ст. 437, 438 ГК РФ).</p>
+
+                <h3>2. Предмет договора</h3>
+                <p>Исполнитель предоставляет Пользователю платный доступ к программному инструменту AutoRedactor — плагину для Figma, обеспечивающему автоматизированную обработку текстов с использованием языковых моделей третьих лиц. Исполнитель предоставляет доступ к инструменту, но не гарантирует достижение Пользователем каких-либо конкретных результатов.</p>
+
+                <h3>3. Стоимость и порядок оплаты</h3>
+                <p>Стоимость подписки составляет 169 (сто шестьдесят девять) рублей в месяц. Оплата производится через сервис ЮKassa. Подписка продлевается автоматически каждые 30 дней. Пользователь вправе отключить автопродление в любой момент через интерфейс плагина или страницу управления подпиской.</p>
+                <p>Исполнитель вправе в одностороннем порядке изменить стоимость подписки, уведомив Пользователя не менее чем за 14 календарных дней путём размещения новой редакции Оферты на сайте. Изменение тарифа не распространяется на уже оплаченные периоды. Продолжение использования Сервиса после вступления изменений в силу означает согласие Пользователя с новыми условиями.</p>
+
+                <h3>4. Порядок оказания услуги</h3>
+                <p>Доступ к использованию плагина открывается автоматически сразу после подтверждения оплаты непосредственно в интерфейсе плагина AutoRedactor в Figma. Использование Сервиса ограничено техническими лимитами: не более 100 запросов в сутки для активных подписчиков. С момента активации доступа услуга считается начатой и фактически оказываемой.</p>
+
+                <h3>5. Возврат денежных средств</h3>
+                <p>Настоящий договор является абонентским в соответствии со ст. 429.4 ГК РФ. Абонентская плата за текущий оплаченный период не возвращается, поскольку с момента активации доступ к Сервису предоставлен в полном объёме и считается фактически оказанной услугой.</p>
+                <p>Пользователь вправе отказаться от дальнейшего использования Сервиса в порядке ст. 782 ГК РФ. Возврат за неиспользованные полные календарные дни текущего периода осуществляется за вычетом стоимости фактически предоставленного доступа.</p>
+                <p>В случае технической ошибки или двойного списания Пользователь направляет письменное обращение на <a href="mailto:fallofglory@gmail.com">fallofglory@gmail.com</a> с подтверждением факта ошибки. Исполнитель рассматривает обращение в течение 10 рабочих дней и при подтверждении ошибки возвращает излишне списанные средства.</p>
+
+                <h3>6. Ограничение ответственности</h3>
+                <p>Сервис предоставляется «как есть» (as is). Результаты обработки текстов формируются языковыми моделями третьих лиц; Исполнитель не гарантирует их достоверность, точность, полноту или пригодность для конкретных целей. Пользователь самостоятельно проверяет и несёт ответственность за использование результатов.</p>
+                <p>Исполнитель не несёт ответственности за: косвенные убытки и упущенную выгоду; сбои в работе Figma Plugin API, AI-провайдеров и иных сторонних сервисов; временную недоступность Сервиса по причинам, не зависящим от Исполнителя. Суммарные перерывы в работе, не превышающие 72 часов в месяц, не являются основанием для возврата абонентской платы.</p>
+
+                <h3>7. Права и обязанности сторон</h3>
+                <p>Исполнитель вправе немедленно приостановить или прекратить доступ к Сервису без возврата абонентской платы в случае: нарушения Пользователем условий настоящей Оферты; использования Сервиса способом, нарушающим законодательство РФ или причиняющим вред третьим лицам; попыток обойти технические ограничения, автоматизированного доступа (ботов, скрапинга); предоставления заведомо ложных данных; передачи доступа третьим лицам.</p>
+                <p>Приостановление в указанных случаях является следствием существенного нарушения договора Пользователем (ст. 450 ГК РФ) и не влечёт обязанности Исполнителя возместить убытки.</p>
+                <p>Пользователь обязуется использовать плагин исключительно в личных целях, не передавать доступ третьим лицам, не нарушать авторские права.</p>
+
+                <h3>8. Претензионный порядок</h3>
+                <p>Претензии направляются на <a href="mailto:fallofglory@gmail.com">fallofglory@gmail.com</a>. Исполнитель рассматривает претензию в течение 10 рабочих дней. При недостижении согласия споры разрешаются в судебном порядке по месту нахождения Исполнителя в соответствии с законодательством РФ.</p>
+
+                <h3>9. Персональные данные</h3>
+                <p>Акцептуя настоящую Оферту, Пользователь даёт согласие на обработку персональных данных (идентификатор Figma, имя аккаунта) в целях исполнения договора. Порядок обработки определяется Политикой конфиденциальности, размещённой на этой же странице.</p>
+
+                <h3>10. Реквизиты Исполнителя</h3>
+                <p>
+                  Лопаткин Александр Сергеевич<br>
+                  Самозанятый, ИНН: 772855128359<br>
+                  Email: <a href="mailto:fallofglory@gmail.com">fallofglory@gmail.com</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACCORDION 2: ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ -->
+        <div class="accordion-item" id="privacy">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)" aria-expanded="false">
+            <div class="accordion-trigger-text">
+              <span class="accordion-title">Политика конфиденциальности</span>
+              <span class="accordion-subtitle">Редакция от 29.03.2026</span>
+            </div>
+            <div class="accordion-icon">
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-body-inner">
+              <div class="doc-content">
+                <p class="doc-title">Политика конфиденциальности и обработки персональных данных</p>
+                <p class="doc-edition">Редакция от 29.03.2026</p>
+
+                <h3>1. Оператор</h3>
+                <p>Лопаткин Александр Сергеевич, ИНН 772855128359. Контакт: <a href="mailto:fallofglory@gmail.com">fallofglory@gmail.com</a></p>
+
+                <h3>2. Какие данные обрабатываются</h3>
+                <ul>
+                  <li>Идентификатор пользователя Figma (Figma User ID)</li>
+                  <li>Имя аккаунта Figma</li>
+                  <li>Данные об использовании Сервиса (количество запросов, дата последнего использования)</li>
+                  <li>Платёжные данные обрабатываются исключительно сервисом ЮKassa; Оператор не получает и не хранит реквизиты карт</li>
+                </ul>
+
+                <h3>3. Цели обработки</h3>
+                <ul>
+                  <li>Идентификация пользователя в Сервисе</li>
+                  <li>Учёт использования в рамках тарифного плана</li>
+                  <li>Исполнение договора (оферты)</li>
+                </ul>
+
+                <h3>4. Правовое основание</h3>
+                <p>Обработка осуществляется на основании исполнения договора (ст. 6 п. 1 пп. 5 ФЗ-152) и согласия субъекта, выраженного при акцепте оферты.</p>
+
+                <h3>5. Хранение и передача данных</h3>
+                <p>Данные хранятся на серверах в ЕС/РФ и не передаются третьим лицам, за исключением платёжного сервиса ЮKassa и случаев, предусмотренных законодательством РФ. Срок хранения — в течение действия договора и 3 лет после его прекращения.</p>
+
+                <h3>6. Права субъекта</h3>
+                <p>Пользователь вправе запросить информацию об обрабатываемых данных, потребовать их исправления или удаления, отозвать согласие. Обращения — на <a href="mailto:fallofglory@gmail.com">fallofglory@gmail.com</a>. Срок ответа — 30 дней.</p>
+
+                <h3>7. Изменение политики</h3>
+                <p>Актуальная редакция всегда доступна по адресу: <a href="https://lightoflantern.github.io/autoredactor-landing/legal.html">https://lightoflantern.github.io/autoredactor-landing/legal.html</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 AutoRedactor · Лопаткин Александр Сергеевич, ИНН 772855128359 · <a href="/autoredactor-landing/legal.html">Правовые документы</a></p>
+  </footer>
+
+  <script>
+    function toggleAccordion(trigger) {
+      const item = trigger.closest('.accordion-item');
+      const body = item.querySelector('.accordion-body');
+      const isOpen = item.classList.contains('open');
+
+      if (isOpen) {
+        item.classList.remove('open');
+        body.style.maxHeight = '0';
+        trigger.setAttribute('aria-expanded', 'false');
+      } else {
+        item.classList.add('open');
+        body.style.maxHeight = body.scrollHeight + 'px';
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    // При загрузке проверяем хэш для автооткрытия нужного аккордеона
+    window.addEventListener('DOMContentLoaded', function () {
+      const hash = window.location.hash;
+      if (hash === '#offer' || hash === '#privacy') {
+        const target = document.querySelector(hash);
+        if (target) {
+          const trigger = target.querySelector('.accordion-trigger');
+          if (trigger) toggleAccordion(trigger);
+          setTimeout(function () { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
