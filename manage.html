@@ -75,6 +75,15 @@
       fill: #fff;
     }
 
+    .nav-link {
+      color: var(--muted);
+      font-size: 14px;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--text); }
+    .nav-link.active { color: var(--accent); }
+
     /* MAIN LAYOUT */
     main {
       max-width: 640px;
@@ -513,7 +522,7 @@
 
   <!-- NAV -->
   <nav>
-    <a href="index.html" class="nav-logo">
+    <a href="/autoredactor-landing/" class="nav-logo">
       <span class="logo-icon">
         <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
           <path d="M2 3h12v2H2V3zm0 4h8v2H2V7zm0 4h5v2H2v-2z"/>
@@ -521,10 +530,11 @@
       </span>
       AutoRedactor
     </a>
-    <span class="status-badge">
-      <span class="status-dot"></span>
-      Подписка активна
-    </span>
+    <div style="display:flex;gap:20px">
+      <a href="/autoredactor-landing/" class="nav-link">Главная</a>
+      <a href="/autoredactor-landing/legal.html" class="nav-link">Правовые документы</a>
+      <a href="/autoredactor-landing/manage.html" class="nav-link active">Управление подпиской (демонстрация механики)</a>
+    </div>
   </nav>
 
   <!-- MAIN -->
@@ -535,7 +545,7 @@
         <span class="breadcrumb-sep">›</span>
         <span>Управление подпиской</span>
       </div>
-      <h1 class="page-title">Управление подпиской</h1>
+      <h1 class="page-title">Управление подпиской <span style="font-size:0.5em;font-weight:400;color:var(--muted);vertical-align:middle">(демонстрация механики отписки)</span></h1>
     </div>
 
     <!-- SUBSCRIPTION CARD -->
